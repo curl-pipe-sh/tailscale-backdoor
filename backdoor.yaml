@@ -1,0 +1,99 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tailscale-auth
+stringData:
+  TS_AUTHKEY: ""
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tailscale-backdoor
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tailscale-backdoor
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["secrets"]
+  # Create can not be restricted to a resource name.
+  verbs: ["create"]
+- apiGroups: [""] # "" indicates the core API group
+  resourceNames: ["tailscale-auth"]
+  resources: ["secrets"]
+  verbs: ["get", "update", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tailscale-backdoor
+subjects:
+- kind: ServiceAccount
+  name: "tailscale-backdoor"
+roleRef:
+  kind: Role
+  name: tailscale-backdoor
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tailscale-backdoor
+  labels:
+    app: tailscale-backdoor
+    owner: nobody
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tailscale-backdoor
+  template:
+    metadata:
+      labels:
+        app: tailscale-backdoor
+        owner: nodoby
+    spec:
+      serviceAccountName: tailscale-backdoor
+      containers:
+      - name: sshd
+        image: pschmitt/sshd
+        imagePullPolicy: Always
+        env:
+        - name: GITHUB_USERNAME
+          value: pschmitt
+        - name: PERMIT_ROOT_LOGIN
+          value: "yes"
+
+      - name: tailscale
+        image: "ghcr.io/tailscale/tailscale:v1.36"
+        imagePullPolicy: Always
+        env:
+        # Store the state in a k8s secret
+        # FIXME This is not working for ts <= 1.36
+        # - name: TS_KUBE_SECRET
+        #   value: null
+        # FIXME This is not working for ts <= 1.37
+        - name: TS_HOSTNAME
+          value: "k8s-backdoor"
+        - name: TS_KUBE_SECRET
+          value: tailscale-auth
+        - name: TS_USERSPACE
+          value: "false"
+        - name: TS_AUTH_ONCE
+          value: "true"  # default: false
+        - name: TS_AUTHKEY
+          valueFrom:
+            secretKeyRef:
+              name: tailscale-auth
+              key: TS_AUTHKEY
+              optional: true
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN

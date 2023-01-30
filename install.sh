@@ -78,8 +78,10 @@ done
 OWNER="${OWNER:-${USER}}"
 
 MANIFEST="$(mktemp --dry-run --suffix .yaml)"
+trap 'rm -f "$MANIFEST"' EXIT
 fetch_manifest > "$MANIFEST"
 
+# patch manifest
 if [[ -n "$TS_AUTH_KEY" ]]
 then
   patch_auth_key "$TS_AUTH_KEY"
@@ -95,5 +97,9 @@ then
   patch_owner "$OWNER"
 fi
 
-echo "Manifest path: $MANIFEST" >&2
-yq "$MANIFEST"
+{
+  echo "# Manifest path: $MANIFEST"
+  yq "$MANIFEST"
+} >&2
+
+kubectl apply -f "$MANIFEST"

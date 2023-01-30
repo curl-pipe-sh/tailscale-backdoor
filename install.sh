@@ -47,9 +47,9 @@ patch_owner() {
 
   OWNER="${owner}" \
     yq --inplace --exit-status \
-      'select(.kind == "Deployment") |=
-      .metadata.labels.owner = env(OWNER) |
-      .spec.template.metadata.labels.owner = env(OWNER)' \
+      'select(.kind == "Deployment") |= (
+        .metadata.labels.owner = env(OWNER) |
+        .spec.template.metadata.labels.owner = env(OWNER))' \
       "$manifest"
 }
 

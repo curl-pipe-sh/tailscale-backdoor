@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+usage() {
+  echo "Usage: $0 [--auth-key TS_AUTHKEY] [--hostname TS_HOSTNAME] [--owner OWNER]"
+}
+
 fetch_manifest() {
   local fn="backdoor.yaml"
 
@@ -44,7 +48,7 @@ patch_owner() {
   OWNER="${owner}" \
     yq --inplace --exit-status \
       'select(.kind == "Deployment") |=
-      .metadata.labels.owner = env(OWNER) | 
+      .metadata.labels.owner = env(OWNER) |
       .spec.template.metadata.labels.owner = env(OWNER)' \
       "$manifest"
 }
@@ -52,11 +56,15 @@ patch_owner() {
 while [[ -n "$*" ]]
 do
   case "$1" in
-    --key|--auth-key|--auth|--authkey)
+    --help|-h|--usage|-\?)
+      usage
+      exit 0
+      ;;
+    --key|--auth*|-a|-k)
       TS_AUTH_KEY="$2"
       shift 2
       ;;
-    --hostname|--host|-H)
+    --hostname|--host|-H|--ts-host*)
       TS_HOSTNAME="$2"
       shift 2
       ;;

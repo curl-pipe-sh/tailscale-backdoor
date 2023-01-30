@@ -72,6 +72,10 @@ do
       OWNER="$2"
       shift 2
       ;;
+    --uninstall|-u|--delete|--remove|--rm|-d|-r)
+      DELETE=1
+      shift
+      ;;
   esac
 done
 
@@ -102,4 +106,9 @@ fi
   yq "$MANIFEST"
 } >&2
 
-kubectl apply -f "$MANIFEST"
+if [[ -n "$DELETE" ]]
+then
+  kubectl delete -f "$MANIFEST"
+else
+  kubectl apply -f "$MANIFEST"
+fi

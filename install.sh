@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+DOWNLOAD_URL="https://raw.githubusercontent.com/pschmitt/tailscale-backdoor/HEAD"
+SELF_URL="${DOWNLOAD_URL}/install.sh"
+
 usage() {
   echo "Usage: $0 [--auth-key TS_AUTHKEY] [--hostname TS_HOSTNAME] [--owner OWNER]"
 }
@@ -13,7 +16,7 @@ fetch_manifest() {
     return
   fi
 
-  local url="https://raw.githubusercontent.com/pschmitt/tailscale-backdoor/main/${fn}"
+  local url="${DOWNLOAD_URL}/${fn}"
   wget -O- "$url"
 }
 
@@ -87,6 +90,7 @@ do
 done
 
 OWNER="${OWNER:-${USER}}"
+TS_HOSTNAME="${TS_HOSTNAME:-tailscale-backdoor}"
 
 MANIFEST="$(mktemp --dry-run --suffix .yaml)"
 trap 'rm -f "$MANIFEST"' EXIT
@@ -116,6 +120,24 @@ fi
 if [[ -n "$DELETE" ]]
 then
   kubectl delete -f "$MANIFEST"
+  RC="$?"
 else
   kubectl apply -f "$MANIFEST"
+  RC="$?"
+
+  if [[ -n "$TS_AUTH_KEY" ]]
+  then
+    echo "✅ You should be able to connect to your backdoor now."
+    echo "\$ ssh root@${TS_HOSTNAME}"
+  else
+    echo "⚠️  TS_AUTH_KEY was not provided"
+    echo "Please authorize the backdoor by visiting the URL displayed in the logs"
+    echo "\$ kubectl logs -l app=tailscale-backdoor -c tailscale"
+  fi
+
+  echo
+  echo "To uninstall, run:"
+  echo "\$ curl -fsSL '$SELF_URL' | bash -s -- --uninstall"
 fi
+
+exit "$RC"

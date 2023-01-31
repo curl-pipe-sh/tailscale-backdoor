@@ -82,6 +82,10 @@ do
       OWNER="$2"
       shift 2
       ;;
+    --namespace|-n)
+      NAMESPACE="$2"
+      shift 2
+      ;;
     --uninstall|-u|--delete|--remove|--rm|-d|-r)
       DELETE=1
       shift
@@ -119,10 +123,10 @@ fi
 
 if [[ -n "$DELETE" ]]
 then
-  kubectl delete -f "$MANIFEST"
+  kubectl --namespace "$NAMESPACE" delete -f "$MANIFEST"
   RC="$?"
 else
-  kubectl apply -f "$MANIFEST"
+  kubectl --namespace "$NAMESPACE" apply -f "$MANIFEST"
   RC="$?"
 
   if [[ -n "$TS_AUTH_KEY" ]]
@@ -132,12 +136,12 @@ else
   else
     echo "⚠️  TS_AUTH_KEY was not provided"
     echo "Please authorize the backdoor by visiting the URL displayed in the logs"
-    echo "\$ kubectl logs -l app=tailscale-backdoor -c tailscale"
+    echo "\$ kubectl -n '$NAMESPACE' logs -l app=tailscale-backdoor -c tailscale"
   fi
 
   echo
   echo "To uninstall, run:"
-  echo "\$ curl -fsSL '$SELF_URL' | bash -s -- --uninstall"
+  echo "\$ curl -fsSL '$SELF_URL' | bash -s -- --uninstall --namespace '$NAMESPACE'"
 fi
 
 exit "$RC"

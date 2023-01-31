@@ -32,12 +32,19 @@ patch_hostname() {
   local ts_hostname="${1:-${TS_HOSTNAME}}"
   local manifest="${2:-${MANIFEST}}"
 
+  # Update TS_HOSTNAME env var
   TS_HOSTNAME="${ts_hostname}" \
     yq --inplace --exit-status \
       'select(.kind == "Deployment" and .metadata.name == "tailscale-backdoor") |=
        .spec.template.spec.containers[] |=
        select(.name == "tailscale").env[] |=
        select(.name == "TS_HOSTNAME").value = env(TS_HOSTNAME)' \
+      "$manifest"
+
+  # Update hostname in deployment template
+  TS_HOSTNAME="${ts_hostname}" \
+    yq --inplace --exit-status \
+      'select(.kind == "Deployment") |= .spec.template.spec.hostname = env(TS_HOSTNAME)' \
       "$manifest"
 }
 

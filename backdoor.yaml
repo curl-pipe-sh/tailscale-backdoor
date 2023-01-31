@@ -60,6 +60,7 @@ spec:
         owner: nodoby
     spec:
       serviceAccountName: tailscale-backdoor
+      hostname: tailscale-backdoor
       containers:
       - name: sshd
         image: pschmitt/sshd
@@ -80,7 +81,7 @@ spec:
         #   value: null
         # FIXME This is not working for ts <= 1.37
         - name: TS_HOSTNAME
-          value: "k8s-backdoor"
+          value: tailscale-backdoor
         - name: TS_KUBE_SECRET
           value: tailscale-auth
         - name: TS_USERSPACE

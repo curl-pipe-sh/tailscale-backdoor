@@ -4,7 +4,7 @@ DOWNLOAD_URL="https://raw.githubusercontent.com/pschmitt/tailscale-backdoor/HEAD
 SELF_URL="${DOWNLOAD_URL}/install.sh"
 
 usage() {
-  echo "Usage: $0 [--auth-key TS_AUTHKEY] [--hostname TS_HOSTNAME] [--owner OWNER]"
+  echo "Usage: $0 [--namespace NAMESPACE] [--auth-key TS_AUTHKEY] [--hostname TS_HOSTNAME] [--owner OWNER]"
 }
 
 fetch_manifest() {

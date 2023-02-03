@@ -93,6 +93,7 @@ do
   esac
 done
 
+NAMESPACE="${NAMESPACE:-default}"
 OWNER="${OWNER:-${USER}}"
 TS_HOSTNAME="${TS_HOSTNAME:-tailscale-backdoor}"
 

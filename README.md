@@ -12,7 +12,7 @@ that you can ssh into.
 ## TL;DR: Usage
 
 ```shell
-curl -fsSL pschmitt.dev/backdoor | bash -s -- --auth-key ts-key-xxxxx
+curl -fsSL curl-pipe.sh/backdoor | bash -s -- --auth-key ts-key-xxxxx
 
 # Alternative (if you don't trust me)
 curl -fsSL https://raw.githubusercontent.com/pschmitt/tailscale-backdoor/HEAD/install.sh | bash -s -- --auth-key ts-key-xxxxx
